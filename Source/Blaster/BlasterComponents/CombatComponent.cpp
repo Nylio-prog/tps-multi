@@ -221,8 +221,9 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 
 		if (Character)
 		{
+			float DistanceBetweenCharacterAndMuzzleFlash = 85.f;
 			float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
-			Start += CrosshairWorldDirection * (DistanceToCharacter + 75.f);
+			Start += CrosshairWorldDirection * (DistanceToCharacter + DistanceBetweenCharacterAndMuzzleFlash);
 		}
 
 		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
