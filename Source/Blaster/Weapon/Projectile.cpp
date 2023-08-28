@@ -58,7 +58,13 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
 	if (BlasterCharacter)
 	{
-		BlasterCharacter->MulticastHit();
+		ImpactParticles = PlayerImpactParticles;
+		ImpactSound = PlayerImpactSound;
+	}
+	else
+	{
+		ImpactParticles = NonPlayerImpactParticles;
+		ImpactSound = NonPlayerImpactSound;
 	}
 	Destroy(); //Logic in Destroyed
 }
