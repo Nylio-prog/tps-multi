@@ -12,6 +12,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "BlasterAnimInstance.h"
+#include "Blaster/Blaster.h"
 
 // Sets default values
 ABlasterCharacter::ABlasterCharacter()
@@ -38,7 +39,10 @@ ABlasterCharacter::ABlasterCharacter()
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 0.f, 720.f);
 
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
@@ -67,6 +71,28 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	AimOffset(DeltaTime);
+	HideCameraIfCharacterClose();
+}
+
+void ABlasterCharacter::HideCameraIfCharacterClose()
+{
+	if (!IsLocallyControlled()) return;
+	if ((FollowCamera->GetComponentLocation() - GetActorLocation()).Size() < CameraThreshold)
+	{
+		GetMesh()->SetVisibility(false);
+		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
+		{
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		}
+	}
+	else
+	{
+		GetMesh()->SetVisibility(true);
+		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
+		{
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
+		}
+	}
 }
 
 void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -114,6 +140,23 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 
 }
 
+void ABlasterCharacter::MulticastHit_Implementation()
+{
+	PlayHitReactMontage();
+}
+
+void ABlasterCharacter::PlayHitReactMontage()
+{
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && HitReactMontage)
+	{
+		AnimInstance->Montage_Play(HitReactMontage);
+		FName SectionName("FromFront");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
 
 void ABlasterCharacter::MoveForward(float Value)
 {
@@ -283,6 +326,8 @@ void ABlasterCharacter::TurnInPlace(float DeltaTime)
 		}
 	}
 }
+
+
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
