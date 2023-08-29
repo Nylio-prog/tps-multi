@@ -35,6 +35,7 @@ public:
 private:
 	UPROPERTY()
 	class ABlasterCharacter* Character;
+
 	UPROPERTY()
 	class ABlasterPlayerController* Controller;
 
@@ -44,7 +45,7 @@ private:
 	FTimerHandle ElimTextTimer;
 
 	UPROPERTY(EditDefaultsOnly)
-	float ElimTextDelay = 1.5f;
+	float ElimTextDelay = 1.f;
 	void ElimTextTimerFinished();
 
 	

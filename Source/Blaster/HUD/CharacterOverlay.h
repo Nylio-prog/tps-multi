@@ -29,4 +29,7 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* ElimText;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* WeaponAmmoAmount;
 };
