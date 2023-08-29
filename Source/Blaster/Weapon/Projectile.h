@@ -41,8 +41,10 @@ private:
 	/**
 	* Particles and sound
 	*/
+	UPROPERTY()
 	UParticleSystem* ImpactParticles;
 
+	UPROPERTY()
 	class USoundCue* ImpactSound;
 	
 	UPROPERTY(EditAnywhere)
