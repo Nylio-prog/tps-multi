@@ -49,6 +49,9 @@ ABlasterCharacter::ABlasterCharacter()
 	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	
+	//The HandSocket isn't updated before server sees client. This fix is expensive but can't find a better one. 
+	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 0.f, 720.f);
 
