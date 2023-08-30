@@ -14,6 +14,7 @@
 #include "DrawDebugHelpers.h"
 #include "TimerManager.h"
 #include "Sound/SoundCue.h"
+#include "Blaster/Character/BlasterAnimInstance.h"
 
 
 UCombatComponent::UCombatComponent()
@@ -212,6 +213,20 @@ void UCombatComponent::Reload()
 	}
 }
 
+void UCombatComponent::FinishReloading()
+{
+	if (Character == nullptr) return;
+	if (Character->HasAuthority())
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+		UpdateAmmoValues();
+	}
+	if (bFireButtonPressed)
+	{
+		Fire();
+	}
+}
+
 
 void UCombatComponent::ServerReload_Implementation()
 {
@@ -241,19 +256,6 @@ void UCombatComponent::UpdateAmmoValues()
 	EquippedWeapon->AddAmmo(-ReloadAmount);
 }
 
-void UCombatComponent::FinishReloading()
-{
-	if (Character == nullptr) return;
-	if (Character->HasAuthority())
-	{
-		CombatState = ECombatState::ECS_Unoccupied;
-		UpdateAmmoValues();
-	}
-	if (bFireButtonPressed)
-	{
-		Fire();
-	}
-}
 
 void UCombatComponent::OnRep_CombatState()
 {
@@ -273,8 +275,12 @@ void UCombatComponent::OnRep_CombatState()
 
 void UCombatComponent::HandleReload()
 {
-	Character->PlayReloadMontage();
+	if (Character)
+	{
+		Character->PlayReloadMontage();
+	}
 }
+
 
 int32 UCombatComponent::AmountToReload()
 {

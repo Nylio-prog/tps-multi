@@ -6,8 +6,6 @@
 #include "CharacterOverlay.h"
 #include "Announcement.h"
 
-
-
 void ABlasterHUD::BeginPlay()
 {
 	Super::BeginPlay();
