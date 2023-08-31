@@ -9,9 +9,6 @@
 #include "Blaster/BlasterTypes/CombatState.h"
 #include "CombatComponent.generated.h"
 
-
-#define TRACE_LENGTH 80000.f
-
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class BLASTER_API UCombatComponent : public UActorComponent
 {
@@ -55,8 +52,11 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void ServerReload();
 
+	void StartReloadTimer();
+
 	void HandleReload();
 	int32 AmountToReload();
+	FTimerHandle ReloadTimer;
 
 private:
 	UPROPERTY()
@@ -142,6 +142,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	int32 StartingSMGAmmo = 40;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingShotgunAmmo = 10;
 
 	void InitializeCarriedAmmo();
 

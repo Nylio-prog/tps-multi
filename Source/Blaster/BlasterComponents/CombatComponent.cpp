@@ -144,6 +144,7 @@ void UCombatComponent::InitializeCarriedAmmo()
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_Pistol, StartingPistolAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_SubmachineGun, StartingSMGAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Shotgun, StartingShotgunAmmo);
 }
 
 
@@ -230,13 +231,20 @@ void UCombatComponent::FinishReloading()
 	}
 }
 
-
 void UCombatComponent::ServerReload_Implementation()
 {
-	if (Character == nullptr || EquippedWeapon == nullptr) return;
-
+	if (Character == nullptr || EquippedWeapon == nullptr || AmountToReload() == 0) return;
 	CombatState = ECombatState::ECS_Reloading;
+
+	StartReloadTimer();
 	HandleReload();
+}
+
+void UCombatComponent::StartReloadTimer()
+{
+	if (EquippedWeapon == nullptr) return;
+
+	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, this, &UCombatComponent::FinishReloading, EquippedWeapon->GetReloadDelay());
 }
 
 void UCombatComponent::UpdateAmmoValues()
