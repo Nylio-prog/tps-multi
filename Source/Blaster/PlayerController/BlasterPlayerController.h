@@ -15,6 +15,9 @@ class BLASTER_API ABlasterPlayerController : public APlayerController
 	GENERATED_BODY()
 	
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	float MouseSensitivity = 1.f;
+
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDScore(float Score);
 	void SetHUDDefeats(int32 Defeats);
@@ -74,6 +77,8 @@ private:
 
 	UPROPERTY()
 	class ABlasterGameMode* BlasterGameMode;
+
+
 
 	float LevelStartingTime = 0.f;
 	float MatchTime = 0.f;
