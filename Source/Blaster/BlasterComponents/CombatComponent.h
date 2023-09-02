@@ -26,6 +26,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
 	void FireButtonPressed(bool bPressed);
+	UFUNCTION(BlueprintCallable)
+	void ShotgunShellReload();
+	void JumpToShotgunEnd();
+
 
 protected:
 	virtual void BeginPlay() override;
@@ -52,11 +56,8 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void ServerReload();
 
-	void StartReloadTimer();
-
 	void HandleReload();
 	int32 AmountToReload();
-	FTimerHandle ReloadTimer;
 
 private:
 	UPROPERTY()
@@ -161,6 +162,8 @@ private:
 	void OnRep_CombatState();
 
 	void UpdateAmmoValues();
+
+	void UpdateShotgunAmmoValues();
 
 public:
 

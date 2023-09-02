@@ -11,6 +11,7 @@
 #include "Casing.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
+#include "Blaster/BlasterComponents/CombatComponent.h"
 
 // Sets default values
 AWeapon::AWeapon()
@@ -100,6 +101,10 @@ void AWeapon::OnRep_Ammo()
 {
 	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
 	SetHUDAmmo();
+	if (BlasterOwnerCharacter && BlasterOwnerCharacter->GetCombat() && IsFull())
+	{
+		BlasterOwnerCharacter->GetCombat()->JumpToShotgunEnd();
+	}
 }
 
 void AWeapon::SetHUDAmmo()
@@ -170,6 +175,11 @@ void AWeapon::SetWeaponState(EWeaponState State)
 bool AWeapon::IsEmpty()
 {
 	return Ammo <= 0;
+}
+
+bool AWeapon::IsFull()
+{
+	return Ammo == MagCapacity;
 }
 
 void AWeapon::OnRep_WeaponState()

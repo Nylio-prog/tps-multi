@@ -138,9 +138,6 @@ private:
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;
 
-	UPROPERTY(EditAnywhere)
-	float ReloadDelay = 1.8f;
-
 public:	
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere;  }
@@ -148,8 +145,8 @@ public:
 	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
 	FORCEINLINE float GetZoomedInterpSpeed() const { return ZoomInterpSpeed; }
 	bool IsEmpty();
+	bool IsFull();
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
-	FORCEINLINE float GetReloadDelay() const { return ReloadDelay; }
 };
