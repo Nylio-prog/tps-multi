@@ -202,7 +202,6 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	RotateInPlace(DeltaTime);
 	HideCameraIfCharacterClose();
 	PollInit();
-	UE_LOG(LogTemp, Warning, TEXT("The combat state value is: %d"), Combat->CombatState);	
 }
 
 void ABlasterCharacter::RotateInPlace(float DeltaTime)
