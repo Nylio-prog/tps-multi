@@ -19,6 +19,7 @@ public:
 	float MouseSensitivity = 1.f;
 
 	void SetHUDHealth(float Health, float MaxHealth);
+	void SetHUDShield(float Shield, float MaxShield);
 	void SetHUDScore(float Score);
 	void SetHUDDefeats(int32 Defeats);
 	void SetHUDElimText(bool bVisibility);
@@ -96,11 +97,17 @@ private:
 
 	UPROPERTY()
 	class UCharacterOverlay* CharacterOverlay;
-	bool bInitializeCharacterOverlay = false;
-
+	
 	float HUDHealth;
+	bool bInitializeHealth = false;
 	float HUDMaxHealth;
+	float HUDShield;
+	bool bInitializeShield = false;
+	float HUDMaxShield;
 	float HUDScore;
+	bool bInitializeScore = false;
 	int32 HUDDefeats;
+	bool bInitializeDefeats = false;
 	int32 HUDGrenades;
+	bool bInitializeGrenades = false;
 };

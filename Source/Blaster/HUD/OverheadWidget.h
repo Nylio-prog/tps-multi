@@ -22,9 +22,15 @@ public:
 	void SetDisplayText(FString TextToDisplay);
 
 	UFUNCTION(BlueprintCallable)
-	void ShowPlayerNetRole(APawn* InPawn);
+	void ShowPlayerName(APawn* InPawn);
 
 protected:
 	virtual void NativeDestruct() override;
 	
+private:
+	UPROPERTY(EditAnywhere, Category = "Overhead Widget Properties", meta = (AllowPrivateAccess = true, Units = "Seconds"))
+	float PlayerNameTimeout = 30.f;
+	UPROPERTY(EditAnywhere, Category = "Overhead Widget Properties", meta = (AllowPrivateAccess = true, Units = "Seconds"))
+	float PlayerNameInterval = 0.1f;
+	float TotalTime = -0.1f;
 };

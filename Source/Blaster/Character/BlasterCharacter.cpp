@@ -78,6 +78,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(ABlasterCharacter, Health);
+	DOREPLIFETIME(ABlasterCharacter, Shield);
 	DOREPLIFETIME(ABlasterCharacter, bDisableGameplay);
 }
 
@@ -182,6 +183,7 @@ void ABlasterCharacter::MulticastElim_Implementation()
 
 }
 
+
 void ABlasterCharacter::ElimTimerFinished()
 {
 	ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>();
@@ -197,7 +199,8 @@ void ABlasterCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	UpdateHUDHealth();
-	
+	UpdateHUDShield();
+
 	if (HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
@@ -298,7 +301,9 @@ void ABlasterCharacter::PostInitializeComponents()
 	{
 		Buff->Character = this;
 		Buff->SetInitialSpeeds(GetCharacterMovement()->MaxWalkSpeed, GetCharacterMovement()->MaxWalkSpeedCrouched);
+		Buff->SetInitialJumpVelocity(GetCharacterMovement()->JumpZVelocity);
 	}
+
 }
 
 void ABlasterCharacter::PlayFireMontage(bool bAiming)
@@ -397,8 +402,24 @@ void ABlasterCharacter::GrenadeButtonPressed()
 void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
 	if (bElimmed) return;
-	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+	
+	float DamageToHealth = Damage;
+	if (Shield > 0)
+	{
+		if (Shield >= Damage)
+		{
+			Shield = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
+			DamageToHealth = 0.f;
+		}
+		else
+		{
+			DamageToHealth = FMath::Clamp(DamageToHealth - Shield, 0.f, Damage);
+			Shield = 0.f;
+		}
+	}
+	Health = FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth);
 	UpdateHUDHealth();
+	UpdateHUDShield();
 	if (GetCombatState() == ECombatState::ECS_Unoccupied)
 	{
 		PlayHitReactMontage();
@@ -679,12 +700,34 @@ void ABlasterCharacter::OnRep_Health(float LastHealth)
 	
 }
 
+
+void ABlasterCharacter::OnRep_Shield(float LastShield)
+{
+	UpdateHUDShield();
+	bool bShouldPlayHitReactMontage = GetCombatState() == ECombatState::ECS_Unoccupied &&
+		Shield < LastShield;
+
+	if (bShouldPlayHitReactMontage)
+	{
+		PlayHitReactMontage();
+	}
+}
+
 void ABlasterCharacter::UpdateHUDHealth()
 {
 	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
 	if (BlasterPlayerController)
 	{
 		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
+}
+
+void ABlasterCharacter::UpdateHUDShield()
+{
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	if (BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDShield(Shield, MaxShield);
 	}
 }
 
