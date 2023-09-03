@@ -665,10 +665,13 @@ void ABlasterCharacter::TurnInPlace(float DeltaTime)
 	}
 }
 
-void ABlasterCharacter::OnRep_Health()
+void ABlasterCharacter::OnRep_Health(float LastHealth)
 {
 	UpdateHUDHealth();
-	if (GetCombatState() == ECombatState::ECS_Unoccupied)
+	bool bShouldPlayHitReactMontage = GetCombatState() == ECombatState::ECS_Unoccupied &&
+		Health < LastHealth;
+
+	if (bShouldPlayHitReactMontage)
 	{
 		PlayHitReactMontage();
 	}
