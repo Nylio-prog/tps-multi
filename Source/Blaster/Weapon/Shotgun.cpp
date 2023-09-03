@@ -20,7 +20,7 @@ void AShotgun::Fire(const FVector& HitTarget)
 	{
 		FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
 		FVector Start = SocketTransform.GetLocation();
-		TMap<ABlasterCharacter*, uint8> HitMap;
+		TMap<ABlasterCharacter*, uint32> HitMap;
 		for (uint32 i = 0; i < NumberOfPellets; i++)
 		{
 			FHitResult FireHit;
