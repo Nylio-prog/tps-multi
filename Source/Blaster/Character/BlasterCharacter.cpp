@@ -93,17 +93,7 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 
 void ABlasterCharacter::Elim()
 {
-	if (Combat && Combat->EquippedWeapon)
-	{
-		if (Combat->EquippedWeapon->bDestroyWeapon)
-		{
-			Combat->EquippedWeapon->Destroy();
-		}
-		else
-		{
-			Combat->EquippedWeapon->Dropped();
-		}
-	}
+	DropOrDestroysBothWeapons();
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(
 		ElimTimer,
@@ -111,6 +101,35 @@ void ABlasterCharacter::Elim()
 		&ABlasterCharacter::ElimTimerFinished,
 		ElimDelay
 	);
+}
+
+void ABlasterCharacter::DropOrDestroysBothWeapons()
+{
+	if (Combat)
+	{
+		if (Combat->EquippedWeapon)
+		{
+			DropOrDestroyWeapon(Combat->EquippedWeapon);
+		}
+		if (Combat->SecondaryWeapon)
+		{
+			DropOrDestroyWeapon(Combat->SecondaryWeapon);
+		}
+	}
+	
+}
+
+void ABlasterCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
+{
+	if (Weapon == nullptr) return;
+	if (Weapon->bDestroyWeapon)
+	{
+		Weapon->Destroy();
+	}
+	else
+	{
+		Weapon->Dropped();
+	}
 }
 
 void ABlasterCharacter::Destroyed()
@@ -499,14 +518,7 @@ void ABlasterCharacter::EquipButtonPressed()
 	if (bDisableGameplay) return;
 	if(Combat)
 	{
-		if (HasAuthority())
-		{
-			Combat->EquipWeapon(OverlappingWeapon);
-		}
-		else
-		{
-			ServerEquipButtonPressed();
-		}
+		ServerEquipButtonPressed();
 	}
 }
 
@@ -671,7 +683,14 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 {
 	if (Combat)
 	{
-		Combat->EquipWeapon(OverlappingWeapon);
+		if (OverlappingWeapon)
+		{
+			Combat->EquipWeapon(OverlappingWeapon);
+		}
+		else if (Combat->ShouldSwapWeapons())
+		{
+			Combat->SwapWeapons();
+		}
 	}
 }
 
@@ -707,7 +726,6 @@ void ABlasterCharacter::OnRep_Health(float LastHealth)
 	{
 		PlayHitReactMontage();
 	}
-	
 }
 
 
@@ -752,9 +770,14 @@ void ABlasterCharacter::UpdateHUDGrenade()
 
 void ABlasterCharacter::UpdateHUDAmmo()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Trying to update HUD"));
 	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	UE_LOG(LogTemp, Warning, TEXT("The boolean value of controller is %s"), (Controller ? TEXT("true") : TEXT("false")));
+	UE_LOG(LogTemp, Warning, TEXT("The boolean value of Combat is %s"), (Combat ? TEXT("true") : TEXT("false")));
+	UE_LOG(LogTemp, Warning, TEXT("The boolean value of Combat->EquippedWeapon is %s"), (Combat->EquippedWeapon ? TEXT("true") : TEXT("false")));
 	if (BlasterPlayerController && Combat && Combat->EquippedWeapon)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Succeedeed to cast"));
 		BlasterPlayerController->SetHUDCarriedAmmo(Combat->CarriedAmmo);
 		BlasterPlayerController->SetHUDWeaponAmmo(Combat->EquippedWeapon->GetAmmo());
 	}

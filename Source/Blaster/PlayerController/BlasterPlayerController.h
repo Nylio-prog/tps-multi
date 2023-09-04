@@ -41,7 +41,6 @@ public:
 	void OnMatchStateSet(FName State);
 	void HandleMatchHasStarted();
 	void HandleCooldown();
-	void OnCharacterOverlayAddedToViewport();
 
 protected:
 	virtual void BeginPlay() override;
