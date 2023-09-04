@@ -41,6 +41,7 @@ public:
 	void OnMatchStateSet(FName State);
 	void HandleMatchHasStarted();
 	void HandleCooldown();
+	void OnCharacterOverlayAddedToViewport();
 
 protected:
 	virtual void BeginPlay() override;
@@ -110,4 +111,8 @@ private:
 	bool bInitializeDefeats = false;
 	int32 HUDGrenades;
 	bool bInitializeGrenades = false;
+	float HUDCarriedAmmo;
+	bool bInitializeCarriedAmmo = false;
+	float HUDWeaponAmmo;
+	bool bInitializeWeaponAmmo = false;
 };
