@@ -22,6 +22,9 @@
 #include "Blaster/PlayerState/BlasterPlayerState.h"
 #include "Blaster/Weapon/WeaponTypes.h"
 #include "Blaster/BlasterComponents/BuffComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
+#include "Components/InputComponent.h"
 
 ABlasterCharacter::ABlasterCharacter()
 {
@@ -224,8 +227,17 @@ void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Enhanced input 
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(GetController()) : BlasterPlayerController;
+	if (BlasterPlayerController)
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(BlasterPlayerController->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(CharacterMappingContext, 0);
+		}
+	}
+
 	SpawnDefaultWeapon();
-	UpdateHUDAmmo();
 	UpdateHUDHealth();
 	UpdateHUDShield();
 	UpdateHUDGrenade();
@@ -298,25 +310,29 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ABlasterCharacter::Jump);
+	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
+	{
+		EnhancedInputComponent->BindAction(MoveForwardAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::MoveForward);		
+		EnhancedInputComponent->BindAction(MoveRightAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::MoveRight);
+		
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Look);
 
-	PlayerInputComponent->BindAxis("MoveForward", this, &ABlasterCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &ABlasterCharacter::MoveRight);
-	PlayerInputComponent->BindAxis("Turn", this, &ABlasterCharacter::Turn);
-	PlayerInputComponent->BindAxis("LookUp", this, &ABlasterCharacter::LookUp);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Jump);
 
-	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ABlasterCharacter::EquipButtonPressed);
-	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ABlasterCharacter::CrouchButtonPressed);
+		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::EquipButtonPressed);
 
-	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &ABlasterCharacter::AimButtonPressed);
-	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ABlasterCharacter::AimButtonReleased);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::CrouchButtonPressed);
 
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ABlasterCharacter::FireButtonPressed);
-	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ABlasterCharacter::FireButtonReleased);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &ABlasterCharacter::AimButtonPressed);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &ABlasterCharacter::AimButtonReleased);
 
-	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ABlasterCharacter::ReloadButtonPressed);
-	PlayerInputComponent->BindAction("ThrowGrenade", IE_Pressed, this, &ABlasterCharacter::GrenadeButtonPressed);
+		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &ABlasterCharacter::FireButtonPressed);
+		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &ABlasterCharacter::FireButtonReleased);
 
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::ReloadButtonPressed);
+
+		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::GrenadeButtonPressed);
+	}
 }
 
 void ABlasterCharacter::PostInitializeComponents()
@@ -481,36 +497,38 @@ void ABlasterCharacter::PollInit()
 	}
 }
 
-void ABlasterCharacter::MoveForward(float Value)
+void ABlasterCharacter::MoveForward(const FInputActionValue& Value)
 {
 	if (bDisableGameplay) return;
-	if (Controller != nullptr && Value != 0.f) 
+	const float DirectionValue = Value.Get<float>();
+	if (Controller != nullptr && DirectionValue != 0.f)
 	{
 		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
 		const FVector Direction(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X));
-		AddMovementInput(Direction, Value);
+		AddMovementInput(Direction, DirectionValue);
 	}
 }
 
-void ABlasterCharacter::MoveRight(float Value)
+void ABlasterCharacter::MoveRight(const FInputActionValue& Value)
 {
 	if (bDisableGameplay) return;
-	if (Controller != nullptr && Value != 0.f)
+	const float DirectionValue = Value.Get<float>();
+	if (Controller != nullptr && DirectionValue != 0.f)
 	{
 		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
 		const FVector Direction(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y));
-		AddMovementInput(Direction, Value);
+		AddMovementInput(Direction, DirectionValue);
 	}
 }
 
-void ABlasterCharacter::Turn(float Value)
+void ABlasterCharacter::Look(const FInputActionValue& Value)
 {
-	AddControllerYawInput(Value);
-}
-
-void ABlasterCharacter::LookUp(float Value)
-{
-	AddControllerPitchInput(Value);
+	const FVector2D LookAxisValue = Value.Get<FVector2D>();
+	if (GetController())
+	{
+		AddControllerYawInput(LookAxisValue.X);
+		AddControllerPitchInput(LookAxisValue.Y);
+	}
 }
 
 void ABlasterCharacter::EquipButtonPressed()
@@ -770,14 +788,9 @@ void ABlasterCharacter::UpdateHUDGrenade()
 
 void ABlasterCharacter::UpdateHUDAmmo()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Trying to update HUD"));
 	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
-	UE_LOG(LogTemp, Warning, TEXT("The boolean value of controller is %s"), (Controller ? TEXT("true") : TEXT("false")));
-	UE_LOG(LogTemp, Warning, TEXT("The boolean value of Combat is %s"), (Combat ? TEXT("true") : TEXT("false")));
-	UE_LOG(LogTemp, Warning, TEXT("The boolean value of Combat->EquippedWeapon is %s"), (Combat->EquippedWeapon ? TEXT("true") : TEXT("false")));
 	if (BlasterPlayerController && Combat && Combat->EquippedWeapon)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Succeedeed to cast"));
 		BlasterPlayerController->SetHUDCarriedAmmo(Combat->CarriedAmmo);
 		BlasterPlayerController->SetHUDWeaponAmmo(Combat->EquippedWeapon->GetAmmo());
 	}
