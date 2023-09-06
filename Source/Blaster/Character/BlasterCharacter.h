@@ -43,11 +43,18 @@ public:
 	void UpdateHUDGrenade();
 	void UpdateHUDAmmo();
 	void SpawnDefaultWeapon();
-
 	class ABlasterGameMode* BlasterGameMode;
+
+	//Sensitivity
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	float SensitivityX = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	float SensitivityY = 1.f;
 
 protected:
 	virtual void BeginPlay() override;
+
+	void InitSensitivity();
 
 	// Enhanced input system
 	
@@ -74,6 +81,8 @@ protected:
 	UInputAction* MoveRightAction;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* LookAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* PingAction;
 	
 	void MoveForward(const FInputActionValue& Value);
 	void MoveRight(const FInputActionValue& Value);
@@ -93,6 +102,7 @@ protected:
 	void GrenadeButtonPressed();
 	void DropOrDestroyWeapon(AWeapon* Weapon);
 	void DropOrDestroysBothWeapons();
+	void PingButtonPressed();
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
@@ -101,7 +111,6 @@ protected:
 	void PollInit();
 	void RotateInPlace(float DeltaTime);
 	
-
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraBoom;
@@ -258,6 +267,7 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> DefaultWeaponClass;
+	AWeapon* StartingWeapon;
 
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -283,5 +293,6 @@ public:
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
 	FORCEINLINE UBuffComponent* GetBuff() const { return Buff; }
+	FORCEINLINE AWeapon* GetDefaultWeapon() const { return StartingWeapon; }
 
 };

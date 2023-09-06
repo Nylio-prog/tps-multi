@@ -26,7 +26,6 @@ void ABlasterGameMode::BeginPlay()
 	LevelStartingTime = GetWorld()->GetTimeSeconds();
 }
 
-
 void ABlasterGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);

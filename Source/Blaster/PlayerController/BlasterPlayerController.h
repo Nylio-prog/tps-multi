@@ -25,6 +25,7 @@ public:
 	void SetHUDMatchCountdown(float CountdownTime);
 	void SetHUDAnnouncementCountdown(float CountdownTime);
 	void SetHUDGrenades(int32 Grenades);
+	void SetHUDPing(bool bVisibility);
 
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void Tick(float DeltaTime) override;
@@ -70,14 +71,15 @@ protected:
 
 	UFUNCTION(Client, Reliable)
 	void ClientJoinMidGame(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime);
+
+	void CheckPing(float DeltaTime);
+
 private:
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;
 
 	UPROPERTY()
 	class ABlasterGameMode* BlasterGameMode;
-
-
 
 	float LevelStartingTime = 0.f;
 	float MatchTime = 0.f;
@@ -111,4 +113,13 @@ private:
 	bool bInitializeCarriedAmmo = false;
 	float HUDWeaponAmmo;
 	bool bInitializeWeaponAmmo = false;
+
+	bool bShouldComputeAndDisplayPing = false;
+	float PingRunningTime = 1.5f; //Set above as ping frequency so it exceeds the timer and computes on the first frame
+	float PingFrequency = 1.f;
+	uint32 Ping = 0;
+
+public:
+	void SetShouldComputeAndDisplayPing(bool bComputePing);
+	FORCEINLINE bool GetShouldComputeAndDisplayPing() const {return bShouldComputeAndDisplayPing; }
 };

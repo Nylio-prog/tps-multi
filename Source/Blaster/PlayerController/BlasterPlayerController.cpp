@@ -32,6 +32,23 @@ void ABlasterPlayerController::Tick(float DeltaTime)
 	CheckTimeSync(DeltaTime);
 	PollInit();
 
+	CheckPing(DeltaTime);
+}
+
+void ABlasterPlayerController::CheckPing(float DeltaTime)
+{
+	if (!bShouldComputeAndDisplayPing) return;
+	PingRunningTime += DeltaTime;
+	if (PingRunningTime > PingFrequency)
+	{
+		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
+		if (PlayerState)
+		{
+			Ping = PlayerState->GetCompressedPing() * 4; //Ping compressed and divided by 4
+			SetHUDPing(bShouldComputeAndDisplayPing);
+		}
+		PingRunningTime = 0.f;
+	}
 }
 
 void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -307,6 +324,24 @@ void ABlasterPlayerController::SetHUDGrenades(int32 Grenades)
 	}
 }
 
+void ABlasterPlayerController::SetHUDPing(bool bVisibility)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->PingText;
+
+	ESlateVisibility Visibility = bVisibility == true ? ESlateVisibility::Visible : ESlateVisibility::Hidden;
+
+	if (bHUDValid)
+	{
+		FString PingText = FString::Printf(TEXT("%d ms"), Ping);
+		BlasterHUD->CharacterOverlay->PingText->SetText(FText::FromString(PingText));
+		BlasterHUD->CharacterOverlay->PingText->SetVisibility(Visibility);
+	}
+}
+
 
 void ABlasterPlayerController::SetHUDTime()
 {
@@ -429,6 +464,12 @@ void ABlasterPlayerController::OnRep_MatchState()
 	{
 		HandleCooldown();
 	}
+}
+
+void ABlasterPlayerController::SetShouldComputeAndDisplayPing(bool bComputePing)
+{
+	bShouldComputeAndDisplayPing = bComputePing;
+	PingRunningTime = 1.5f; //Set above as ping frequency so it exceeds the timer and computes it on the first frame
 }
 
 void ABlasterPlayerController::HandleMatchHasStarted()

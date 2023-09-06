@@ -25,6 +25,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Components/InputComponent.h"
+#include "Misc/FileHelper.h"
 
 ABlasterCharacter::ABlasterCharacter()
 {
@@ -120,6 +121,24 @@ void ABlasterCharacter::DropOrDestroysBothWeapons()
 		}
 	}
 	
+}
+
+void ABlasterCharacter::PingButtonPressed()
+{
+
+	if (BlasterPlayerController)
+	{
+		if (BlasterPlayerController->GetShouldComputeAndDisplayPing())
+		{
+			BlasterPlayerController->SetShouldComputeAndDisplayPing(false);
+			BlasterPlayerController->SetHUDPing(false);
+		}
+		else
+		{
+			BlasterPlayerController->SetShouldComputeAndDisplayPing(true);
+		}
+
+	}
 }
 
 void ABlasterCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
@@ -225,6 +244,8 @@ void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	InitSensitivity();
+
 	// Enhanced input 
 	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(GetController()) : BlasterPlayerController;
 	if (BlasterPlayerController)
@@ -249,6 +270,16 @@ void ABlasterCharacter::BeginPlay()
 	if (AttachedGrenade)
 	{
 		AttachedGrenade->SetVisibility(false);
+	}
+}
+
+void ABlasterCharacter::InitSensitivity()
+{
+	FString SaveText;
+	if (FFileHelper::LoadFileToString(SaveText, *(FPaths::GameSourceDir() + FString("Settings.txt"))))
+	{
+		SensitivityX = FCString::Atof(*SaveText);
+		SensitivityY = FCString::Atof(*SaveText);
 	}
 }
 
@@ -328,6 +359,8 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &ABlasterCharacter::FireButtonPressed);
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Completed, this, &ABlasterCharacter::FireButtonReleased);
+
+		EnhancedInputComponent->BindAction(PingAction, ETriggerEvent::Started, this, &ABlasterCharacter::PingButtonPressed);
 
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::ReloadButtonPressed);
 
@@ -525,8 +558,8 @@ void ABlasterCharacter::Look(const FInputActionValue& Value)
 	const FVector2D LookAxisValue = Value.Get<FVector2D>();
 	if (GetController())
 	{
-		AddControllerYawInput(BlasterGameMode->SensitivityX * LookAxisValue.X);
-		AddControllerPitchInput(BlasterGameMode->SensitivityY * LookAxisValue.Y);
+		AddControllerYawInput(SensitivityX * LookAxisValue.X);
+		AddControllerPitchInput(SensitivityY * LookAxisValue.Y);
 	}
 }
 
@@ -800,7 +833,7 @@ void ABlasterCharacter::SpawnDefaultWeapon()
 	UWorld* World = GetWorld();
 	if (BlasterGameMode && World && !bElimmed && DefaultWeaponClass)
 	{
-		AWeapon* StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
+		StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
 		StartingWeapon->bDestroyWeapon = true;
 		if (Combat)
 		{

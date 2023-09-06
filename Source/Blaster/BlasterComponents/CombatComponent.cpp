@@ -213,7 +213,12 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
 
-	if (EquippedWeapon != nullptr && SecondaryWeapon == nullptr)
+	if (EquippedWeapon == Character->GetDefaultWeapon())
+	{
+		EquipSecondaryWeapon(Character->GetDefaultWeapon());
+		EquipPrimaryWeapon(WeaponToEquip);
+	}
+	else if (EquippedWeapon != nullptr && SecondaryWeapon == nullptr)
 	{
 		EquipSecondaryWeapon(WeaponToEquip);
 	}
