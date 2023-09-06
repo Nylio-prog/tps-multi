@@ -44,6 +44,8 @@ public:
 	void UpdateHUDAmmo();
 	void SpawnDefaultWeapon();
 
+	class ABlasterGameMode* BlasterGameMode;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -197,6 +199,7 @@ private:
 	class ABlasterPlayerController* BlasterPlayerController;
 
 	bool bElimmed = false;
+
 	FTimerHandle ElimTimer;
 
 	UPROPERTY(EditDefaultsOnly)

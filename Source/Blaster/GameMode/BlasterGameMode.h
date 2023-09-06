@@ -36,6 +36,11 @@ public:
 
 	float LevelStartingTime = 0.f;
 
+	//Sensitivity 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	float SensitivityX = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	float SensitivityY = 1.f;
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnMatchStateSet() override;
