@@ -15,6 +15,7 @@
 #include "Blaster/Blaster.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
+#include "Blaster/GameMode/LobbyGameMode.h"
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
@@ -170,6 +171,38 @@ void ABlasterCharacter::Destroyed()
 	}
 }
 
+//PossessedBy is only called on the server when the controller is possessed so we know GetController() will be valid instead of BeginPlay which won't be valid.
+void ABlasterCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	AddMappingContextDependingController();
+}
+
+//Lobby and Multi map don't have same controller so if we want to move in lobby we need to check which controller we're using.
+void ABlasterCharacter::AddMappingContextDependingController()
+{
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(GetController()) : BlasterPlayerController;
+
+	// Enhanced input
+	if (BlasterPlayerController)
+	{
+		if (BlasterPlayerController)
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(BlasterPlayerController->GetLocalPlayer()))
+			{
+				Subsystem->AddMappingContext(CharacterMappingContext, 0);
+			}
+		}
+	}
+	else if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		{
+			Subsystem->AddMappingContext(CharacterMappingContext, 0);
+		}
+	}
+}
+
 void ABlasterCharacter::MulticastElim_Implementation()
 {
 	if (BlasterPlayerController)
@@ -246,14 +279,10 @@ void ABlasterCharacter::BeginPlay()
 
 	InitSensitivity();
 
-	// Enhanced input 
-	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(GetController()) : BlasterPlayerController;
-	if (BlasterPlayerController)
+	//On server, begin play is too early to get controller but on client
+	if (!HasAuthority())
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(BlasterPlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(CharacterMappingContext, 0);
-		}
+		AddMappingContextDependingController();
 	}
 
 	BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));

@@ -31,6 +31,9 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastElim();
 	virtual void Destroyed() override;
+	virtual void PossessedBy(AController* NewController) override;
+
+	void AddMappingContextDependingController();
 
 	UPROPERTY(Replicated)
 	bool bDisableGameplay = false;
