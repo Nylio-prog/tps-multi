@@ -107,7 +107,9 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 	{
 		SetHUDHealth(BlasterCharacter->GetHealth(), BlasterCharacter->GetMaxHealth());
 		BlasterCharacter->UpdateHUDAmmo();
-
+		BlasterCharacter->UpdateHUDHealth();
+		BlasterCharacter->UpdateHUDShield();
+		BlasterCharacter->UpdateHUDGrenade();
 	}
 }
 
@@ -350,6 +352,7 @@ void ABlasterPlayerController::SetHUDTime()
 	if (MatchState == MatchState::WaitingToStart) TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime;
 	else if (MatchState == MatchState::InProgress) TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
 	else if (MatchState == MatchState::Cooldown) TimeLeft = CooldownTime + WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+
 	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
 
 	if (HasAuthority())
@@ -501,7 +504,7 @@ void ABlasterPlayerController::HandleCooldown()
 			BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
 			FString AnnouncementText("New Match Starts In:");
 			BlasterHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
-			
+
 			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
 			ABlasterPlayerState* BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
 			if (BlasterGameState && BlasterPlayerState)
@@ -540,6 +543,7 @@ void ABlasterPlayerController::HandleCooldown()
 	{
 		BlasterCharacter->bDisableGameplay = true;
 		BlasterCharacter->GetCombat()->FireButtonPressed(false);
+		BlasterCharacter->ShouldHideSniperScopeWidget();
 	}
 }
 

@@ -252,15 +252,7 @@ void ABlasterCharacter::MulticastElim_Implementation()
 			GetActorLocation()
 		);
 	}
-	bool bHideSniperScope = IsLocallyControlled() && 
-		Combat && Combat->bAiming && 
-		Combat->EquippedWeapon && 
-		Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
-	if (bHideSniperScope)
-	{
-		ShowSniperScopeWidget(false);
-	}
-
+	ShouldHideSniperScopeWidget();
 }
 
 
@@ -279,18 +271,19 @@ void ABlasterCharacter::BeginPlay()
 
 	InitSensitivity();
 
-	//On server, begin play is too early to get controller but on client
+	//On server, begin play is too early to get controller but on client it's fine, we're updating the server HUD on OnPossessed in the controller
 	if (!HasAuthority())
 	{
 		AddMappingContextDependingController();
+		UpdateHUDAmmo();
+		UpdateHUDHealth();
+		UpdateHUDShield();
+		UpdateHUDGrenade();
 	}
 
 	BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
 
 	SpawnDefaultWeapon();
-	UpdateHUDHealth();
-	UpdateHUDShield();
-	UpdateHUDGrenade();
 
 	if (HasAuthority())
 	{
@@ -820,6 +813,19 @@ void ABlasterCharacter::OnRep_Shield(float LastShield)
 	}
 }
 
+void ABlasterCharacter::ShouldHideSniperScopeWidget()
+{
+	bool bHideSniperScope = IsLocallyControlled() &&
+		Combat && Combat->bAiming &&
+		Combat->EquippedWeapon &&
+		Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
+	if (bHideSniperScope)
+	{
+		ShowSniperScopeWidget(false);
+		Combat->bAiming = false;
+	}
+}
+
 void ABlasterCharacter::UpdateHUDHealth()
 {
 	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
@@ -946,6 +952,12 @@ ECombatState ABlasterCharacter::GetCombatState() const
 {
 	if (Combat == nullptr) return ECombatState::ECS_MAX;
 	return Combat->CombatState;
+}
+
+bool ABlasterCharacter::IsLocallyReloading()
+{
+	if (Combat == nullptr) return false;
+	return Combat->bLocallyReloading;
 }
 
 

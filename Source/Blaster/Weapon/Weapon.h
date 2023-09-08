@@ -17,6 +17,16 @@ enum class EWeaponState : uint8
 	EWS_MAX UMETA(DisplayName = "DefaultMAX")
 };
 
+UENUM(BlueprintType)
+enum class EFireType : uint8
+{
+	EFT_HitScan UMETA(DisplayName = "Hit Scan Weapon"),
+	EFT_Projectile UMETA(DisplayName = "Projectile Weapon"),
+	EFT_Shotgun UMETA(DisplayName = "Shotgun Weapon"),
+
+	EFT_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
 UCLASS()
 class BLASTER_API AWeapon : public AActor
 {
@@ -33,6 +43,8 @@ public:
 	virtual void Fire(const FVector& HitTarget);
 	void Dropped();
 	void AddAmmo(int32 AmmoToAdd);
+	FVector TraceEndWithScatter(const FVector& HitTarget);
+
 
 	/**
 	*Textures for the weapon crosshairs
@@ -84,6 +96,12 @@ public:
 
 	bool bDestroyWeapon = false;
 
+	UPROPERTY(EditAnywhere)
+	EFireType FireType;
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	bool bUseScatter = false;
+
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnWeaponStateSet();
@@ -109,6 +127,16 @@ protected:
 		int32 OtherBodyIndex
 	);
 
+	/**
+	* Trace end with scatter
+	*/
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float DistanceToSphere = 800.f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float SphereRadius = 75.f;
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	USkeletalMeshComponent* WeaponMesh;
@@ -131,16 +159,23 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass;
 
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	UPROPERTY(EditAnywhere)
 	int32 Ammo;
 
-	UFUNCTION()
-	void OnRep_Ammo();
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmo(int32 ServerAmmo);
+
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(int32 AmmoToAdd);
 
 	void SpendRound();
 
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
+
+	//Number of unprocessed server requests for Ammo
+	//Incremented in SpendRound, decremented in ClientUpdateAmmo
+	int32 Sequence = 0;
 
 	UPROPERTY()
 	class ABlasterCharacter* BlasterOwnerCharacter;

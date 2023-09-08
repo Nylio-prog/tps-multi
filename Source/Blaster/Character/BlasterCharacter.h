@@ -40,6 +40,7 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
+	void ShouldHideSniperScopeWidget();
 
 	void UpdateHUDHealth();
 	void UpdateHUDShield();
@@ -290,6 +291,7 @@ public:
 	FORCEINLINE float GetShield() const { return Shield; }
 	FORCEINLINE void SetShield(float Amount) { Shield = Amount; }
 	FORCEINLINE float GetMaxShield() const { return MaxShield; }
+	UFUNCTION(BlueprintCallable)
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
@@ -297,5 +299,5 @@ public:
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
 	FORCEINLINE UBuffComponent* GetBuff() const { return Buff; }
 	FORCEINLINE AWeapon* GetDefaultWeapon() const { return StartingWeapon; }
-
+	bool IsLocallyReloading();
 };
